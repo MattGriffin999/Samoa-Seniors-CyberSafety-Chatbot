@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,95 +6,729 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Fa'amautū-Upega | Samoa Seniors Cyber Safety Chatbot (POC)</title>
 <style>
-  body { font-family: Arial, sans-serif; background:#0b132b; color:#fff; margin:0; }
-  .container { max-width:800px; margin:0 auto; padding:20px; }
-  h1 { font-size:20px; }
-  #chat { background:#1c2541; padding:10px; border-radius:8px; height:400px; overflow-y:auto; }
-  .msg { margin:6px 0; }
-  .user { color:#f6ae2d; }
-  .bot { color:#5bc0be; }
-  #inputArea { margin-top:10px; display:flex; }
-  #userInput { flex:1; padding:10px; border-radius:6px; border:none; }
-  button { padding:10px 16px; margin-left:6px; border:none; border-radius:6px; cursor:pointer; }
-  #sendBtn { background:#5bc0be; color:#000; font-weight:bold; }
-  #clearBtn { background:#f6ae2d; color:#000; font-weight:bold; }
+  :root{
+    --bg:#0b132b;
+    --panel:#1c2541;
+    --accent:#5bc0be;
+    --accent-2:#f6ae2d;
+    --text:#f4f7ff;
+    --muted:#c2cee7;
+    --danger:#ff6b6b;
+    --success:#58d68d;
+  }
+  html,body{height:100%;}
+  body{
+    margin:0; background:linear-gradient(180deg,var(--bg),#121a33); color:var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+  .container{max-width:920px; margin:0 auto; padding:16px;}
+  header{display:flex; gap:12px; align-items:center; justify-content:space-between; padding:8px 0 12px 0;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .logo{width:44px;height:44px;border-radius:12px;background:radial-gradient(circle at 30% 30%, var(--accent), var(--panel)); display:grid; place-items:center; font-weight:800;}
+  h1{font-size:clamp(20px, 3vw, 28px); margin:0;}
+  .sub{color:var(--muted); font-size:14px;}
+  .lang-toggle{display:flex; gap:8px; align-items:center; background:var(--panel); border:1px solid rgba(255,255,255,.08); padding:6px 10px; border-radius:999px;}
+  .lang-toggle button{background:transparent; color:var(--text); border:none; padding:6px 10px; border-radius:999px; cursor:pointer; font-weight:700;}
+  .lang-toggle button.active{background:var(--accent); color:#062b2b;}
+
+  .grid{display:grid; grid-template-columns: 1fr; gap:12px;}
+  @media(min-width:900px){ .grid{grid-template-columns: 2fr 1fr;} }
+
+  .panel{background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:12px;}
+  .panel h2{font-size:18px;margin:6px 0 10px 0;}
+
+  .chat{height:58vh; min-height:360px; overflow:auto; display:flex; flex-direction:column; gap:10px; padding-right:6px;}
+  .msg{display:flex; gap:10px; align-items:flex-start;}
+  .role{min-width:36px; height:36px; border-radius:10px; display:grid; place-items:center; font-weight:800;}
+  .role.user{background:var(--accent-2); color:#3a2500;}
+  .role.bot{background:var(--accent); color:#063b3b;}
+  .bubble{background:var(--panel); border:1px solid rgba(255,255,255,.07); padding:10px 12px; border-radius:14px; max-width:100%;}
+  .bubble h3{margin:0 0 6px 0; font-size:16px;}
+  .bubble p{margin:6px 0; line-height:1.5;}
+  .kicker{font-size:12px; color:var(--muted);}
+  .bullets{margin:6px 0 0 18px;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
+  .chip{background:transparent; color:var(--accent); border:1px dashed var(--accent); border-radius:999px; padding:4px 10px; cursor:pointer; font-size:13px;}
+  .chip:hover{background:rgba(91,192,190,.1)}
+
+  .composer{display:flex; gap:8px; align-items:center; margin-top:10px;}
+  .composer input{flex:1; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.1); background:#0f1734; color:var(--text); font-size:16px;}
+  .btn{background:var(--accent); color:#062b2b; border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer;}
+  .btn.secondary{background:var(--panel); color:var(--text); border:1px solid rgba(255,255,255,.15)}
+  .btn.danger{background:var(--danger); color:#2b0000;}
+  .icon-btn{background:var(--panel); color:var(--text); border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:10px; cursor:pointer;}
+
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:10px;}
+  .card h3{margin:6px 0 6px 0; font-size:16px;}
+  .topic-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .topic{display:block; text-align:left; width:100%;}
+  .tiny{font-size:12px; color:var(--muted)}
+  .notice{border-left:4px solid var(--accent); padding-left:10px;}
+
+  .footer-note{margin-top:8px; font-size:12px; color:var(--muted)}
 </style>
 </head>
 <body>
   <div class="container">
-    <h1>Fa'amautū-Upega — Samoa Seniors Cyber Safety Chatbot</h1>
-    <div id="chat"></div>
-    <div id="inputArea">
-      <input id="userInput" type="text" placeholder="Type your question here" />
-      <button id="sendBtn" type="button">Send</button>
-      <button id="clearBtn" type="button">Clear</button>
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">👁️‍🗨️</div>
+        <div>
+          <h1 id="title">Fa'amautū-Upega — Samoa Seniors Cyber Safety</h1>
+          <div class="sub" id="subtitle">Friendly guidance on scams, fraud, and safe online habits—built for seniors in Samoa.</div>
+        </div>
+      </div>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button id="btn-en" class="active" aria-pressed="true" type="button">English</button>
+        <button id="btn-sm" type="button">Gagana Samoa</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel" aria-labelledby="chat-heading">
+        <h2 id="chat-heading">Chat</h2>
+        <div id="chat" class="chat" aria-live="polite"></div>
+
+        <div class="composer">
+          <button class="icon-btn" id="micBtn" title="Voice input" type="button">🎤</button>
+          <input id="userInput" type="text" placeholder="Type a question, e.g. 'Someone asked me for a parcel fee'" aria-label="Your message" />
+          <button class="btn" id="sendBtn" type="button">Send</button>
+          <button class="btn secondary" id="clearBtn" title="Clear chat" type="button">Clear</button>
+        </div>
+        <div class="chips" id="quickAsk" aria-label="Quick ask examples" style="margin-top:6px"></div>
+        <div class="footer-note" id="disclaimer"></div>
+      </section>
+
+      <aside class="panel" aria-labelledby="help-heading">
+        <h2 id="help-heading">Browse & Get Help</h2>
+        <div class="card notice" id="introNotice"></div>
+        <div class="card">
+          <h3 id="quickTopicsH3">Quick topics</h3>
+          <div class="topic-grid" id="topicGrid"></div>
+        </div>
+        <div class="card">
+          <h3 id="getHelpH3">Get help (Samoa)</h3>
+          <div id="helpBlock"></div>
+        </div>
+        <div class="card">
+          <h3 id="shareH3">Share</h3>
+          <p id="shareText" class="tiny">You can host this single-file app anywhere (e.g., GitHub Pages) and link to it from a LinkedIn article. Include a screenshot and a "Try the demo" link.</p>
+        </div>
+      </aside>
     </div>
   </div>
 
 <script>
-const responses = {
-  phishing: "Scammers may send fake emails or SMS asking for your password or codes. Do not click suspicious links.",
-  money: "Common scams include parcel fees, fake lotteries, and quick profit schemes. Always check with trusted family before paying.",
-  bullying: "If someone bullies you online, take screenshots, block them, and tell someone you trust.",
-  identity: "If your account is hacked, change your password, enable 2FA, and inform your contacts.",
-  fraud: "Scammers may impersonate officials. Verify by calling the real organisation using a public number.",
-  misinformation: "False posts spread quickly. Check the date, source, and official notices before sharing.",
+// Error toast
+window.addEventListener('error', (e)=>{
+  try{
+    const t=document.createElement('div');
+    t.textContent = 'Error: ' + e.message;
+    t.style.position='fixed'; t.style.bottom='16px'; t.style.right='16px';
+    t.style.background='rgba(0,0,0,.7)'; t.style.padding='10px 12px'; t.style.borderRadius='10px';
+    t.style.fontWeight='700'; t.style.zIndex='9999';
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 3000);
+  }catch{}
+});
+
+const L = {
+  en: {
+    ui: {
+      title: "Fa'amautū-Upega — Samoa Seniors Cyber Safety",
+      subtitle: "Friendly guidance on scams, fraud, and safe online habits—built for seniors in Samoa.",
+      placeholder: "Type a question, e.g. 'Someone asked me for a parcel fee'",
+      disclaimer: "This is general guidance only. Never share passwords or one-time codes. If money is at risk, contact your bank immediately.",
+      introNotice: "Tip: You can ask in English or Samoan. Try: 'A letter says I must pay Customs to get my parcel.'",
+      quickTopics: "Quick topics",
+      getHelp: "Get help (Samoa)",
+      shareText: "You can host this single-file app anywhere (e.g., GitHub Pages) and link to it from a LinkedIn article. Include a screenshot and a 'Try the demo' link.",
+      you: "You",
+      bot: "Guide",
+      chips: { copySteps: "Copy steps", speak: "Speak answer", report: "How to report", checklist: "Checklist", learnMore: "Learn more" },
+      fallback: { title: "I'm not fully sure—please select a topic", prompt: "Choose the closest topic below so I can provide the right steps." }
+    },
+    help: {
+      police: { label: "Samoa Police — Report a scam", note: "If you feel unsafe or money is at risk, call right away." },
+      bank: { label: "Your Bank — Fraud team", note: "Ask to freeze the account/card and start a dispute." },
+      telco: { label: "Your Mobile Provider — Block/report spam", note: "They can help block suspicious numbers and texts." },
+      community: { label: "Talk to someone you trust", note: "Aiga/family, church elders, or a community worker can support you." },
+      placeholders: true,
+      contacts: [
+        { name: "Police (non-emergency)", value: "Local number here", href: "#" },
+        { name: "Lifeline / Support", value: "Local number here", href: "#" },
+        { name: "Consumer Protection", value: "Website link here", href: "#" }
+      ]
+    },
+    topics: {}
+  },
+  sm: {
+    ui: {
+      title: "Fa'amautū-Upega — Puipuiga i luga o le initaneti mo tagata matutua",
+      subtitle: "Fesoasoani agamalu e uiga i taufaasese ma amioga saogalemu i luga o le initaneti—fa'apitoa mo Samoa.",
+      placeholder: "Tusi lau fesili, fa'ata'ita'iga: 'Ua fai mai e totogi se pili a le Customs'",
+      disclaimer: "O fautuaga lautele nei. Aua ne'i fa'asoa lau pasiupu po'o numera OTP. Afai e lamatia tupe, vala'au vave le faletupe.",
+      introNotice: "Fautuaga: E mafai ona e fesili i le gagana Samoa po'o le Igilisi. Fa'ata'ita'iga: 'O lo'o mana'omia se pili e maua ai le pusa.'",
+      quickTopics: "Autu vave",
+      getHelp: "Saili Fesoasoani (Samoa)",
+      shareText: "E mafai ona e talimalo i lenei faila e to'atasi (e.g., GitHub Pages) ma fa'asoa le so'oga i totonu o lau tusitusiga LinkedIn.",
+      you: "Oe",
+      bot: "Ta'iala",
+      chips: { copySteps: "Kopi la'asaga", speak: "Faitau leo", report: "Lipoti", checklist: "Siaki-lisi", learnMore: "A'oa'o atili" },
+      fallback: { title: "Le mautinoa — filifili se autu", prompt: "Filifili le autu lata ane i lalo ina ia maua ai la'asaga talafeagai." }
+    },
+    help: {
+      police: { label: "Leoleo o Samoa — Lipoti taufaasese", note: "Afai e te le saogalemu po'o lamatia tupe, vala'au loa." },
+      bank: { label: "Faletupe — Vaega Taufaasese", note: "Talosaga e taofia le teugatupe/katipi ma amata se su'esu'ega." },
+      telco: { label: "'Au'aunaga Telefoni — Poloka/lipoti spam", note: "E mafai ona latou fesoasoani e poloka numera masalomia." },
+      community: { label: "Talanoa i se tagata e te fa'atuatuaina", note: "Aiga, toeaina o le ekalesia, po'o se tagata faigaluega a le nu'u." },
+      placeholders: true,
+      contacts: [
+        { name: "Leoleo (e lē fa'afuase'i)", value: "Tu'u iinei le numera", href: "#" },
+        { name: "Lifeline / Lagolago", value: "Tu'u iinei le numera", href: "#" },
+        { name: "Puipuiga o Tagata Fa'atau", value: "Tu'u iinei le 'upega tafa'ilagi", href: "#" }
+      ]
+    },
+    topics: {}
+  }
 };
 
-function detectIntent(text) {
-  text = text.toLowerCase();
-  if(text.includes("password")||text.includes("link")) return "phishing";
-  if(text.includes("money")||text.includes("parcel")||text.includes("fee")) return "money";
-  if(text.includes("bully")||text.includes("harass")) return "bullying";
-  if(text.includes("identity")||text.includes("hacked")) return "identity";
-  if(text.includes("official")||text.includes("government")) return "fraud";
-  if(text.includes("fake")||text.includes("rumour")) return "misinformation";
-  return null;
+// Topic content (shared to avoid duplication)
+const TOPICS = {
+  phishing: {
+    en: {
+      name: "Phishing & fake logins",
+      keywords: ["phish","login","password","otp","one-time","code","bank link","verification","reset","email","sms","text","facebook","whatsapp","messenger"],
+      advice: {
+        what: [
+          "Scammers pretend to be your bank, telco, or Facebook to steal passwords and one-time codes.",
+          "They create fake login pages and urgent messages: 'verify now or account closed.'",
+          "They may call and ask you to read an SMS code—never share it."
+        ],
+        now: [
+          "Do not click suspicious links. Type the official website yourself or use the official app.",
+          "If you entered details, immediately change your password and enable two-factor authentication (2FA).",
+          "Call your bank using the number on your card to check for unusual activity."
+        ],
+        report: [
+          "Screenshot the message, note the number/sender, and report to your bank/telco.",
+          "Block the sender and delete the message. Warn a family member."
+        ],
+        examples: [
+          "Bank verification SMS with a link",
+          "Facebook 'copyright warning' message",
+          "WhatsApp code request from 'a friend'"
+        ]
+      }
+    },
+    sm: {
+      name: "Phishing & 'upega tafa'ilagi pepelo",
+      keywords: ["phish","login","pasiupu","otp","code","link faletupe","fa'amaoniga","reset","email","sms","fe'au","facebook","whatsapp","messenger"],
+      advice: {
+        what: [
+          "E pepelo le tagata fai faiga e pei o lau faletupe, telefoni, po'o Facebook e ave lau pasiupu ma numera.",
+          "E fai ni itulau ulufale pepelo ma ni fe'au fa'afuase'i: 'fa'amaonia loa pe tapunia lau teugatupe.'",
+          "E mafai ona latou vala'au ma talosaga lau numera SMS—aua ne'i fa'asoa atu."
+        ],
+        now: [
+          "Aua le oomi ni so'oga masalomia. Tusi i totonu le 'upega tafa'ilagi aloa'ia pe fa'aaoga le app aloa'ia.",
+          "Afai na e ulufale fa'amatalaga, sui vave lau pasiupu ma fa'aola le 2FA.",
+          "Vala'au lau faletupe i le numera o lo'o i luga o lau kata e siaki ai."
+        ],
+        report: [
+          "Pu'e lau screenshot, tusi le numera/sender, ma lipoti i lau faletupe/telefoni.",
+          "Poloka le sender ma soloiesea le fe'au. Lapata'i se tasi o le aiga."
+        ],
+        examples: [
+          "SMS fa'amaoniga a le faletupe ma se so'oga",
+          "Fe'au 'copyright' a le Facebook",
+          "Talosaga mo le code WhatsApp mai 'se uo'"
+        ]
+      }
+    }
+  },
+  money: {
+    en: {
+      name: "Financial scams (remittance, parcel, fees)",
+      keywords: ["money","remit","parcel","customs","fee","lottery","jackpot","investment","crypto","giveaway","fee first"],
+      advice: {
+        what: [
+          "Common scams include parcel/customs fees, fake lotteries, investment 'quick profits', and 'pay a fee to receive money.'",
+          "Scammers pressure you to act fast and keep it secret.",
+          "They may pretend to be from Customs, the Post, or a courier with a small 'release fee.'"
+        ],
+        now: [
+          "Stop and check: talk to a family member or trusted person before paying anything.",
+          "Use official channels: track parcels via the courier's real website; call using public numbers.",
+          "Never transfer to 'personal' accounts. If paid, contact your bank immediately."
+        ],
+        report: [
+          "Collect receipts, account numbers, and message screenshots for your bank and police.",
+          "Inform your mobile provider if the request came by SMS/WhatsApp."
+        ],
+        examples: [
+          "'Customs fee' to release a parcel",
+          "'You won a lottery' but must pay a processing fee",
+          "'Investment doubling' on social media"
+        ]
+      }
+    },
+    sm: {
+      name: "Taufaasese tau tupe (remittance, pusa, pili)",
+      keywords: ["tupe","remit","pusa","customs","pili","lottery","jackpot","investment","crypto","giveaway","totogi muamua"],
+      advice: {
+        what: [
+          "E masani taufaasese: pili a le customs mo le pusa, lottery pepelo, 'vave maua tupe', po'o 'totogi se pili e maua ai tupe.'",
+          "E una'ia oe e vave gaoioi ma tausi fa'alilolilo.",
+          "E fai mai o i latou mai le Customs, Post, po'o le courier ma se 'pili laititi'."
+        ],
+        now: [
+          "Taofi ma siaki: talanoa i se tagata fa'atuatuaina a'o le'i totogi.",
+          "Fa'aaoga auala aloa'ia: siaki le pusa i le 'upega tafa'ilagi moni; vala'au i numera lautele.",
+          "Aua le tu'uina atu tupe i teugatupe patino. Afai ua totogi, fa'afeso'ota'i vave le faletupe."
+        ],
+        report: [
+          "Ao mai resiti, numera teugatupe, ma screenshots mo le faletupe ma leoleo.",
+          "Fa'ailoa i lau kamupani telefoni pe a ala mai le SMS/WhatsApp."
+        ],
+        examples: [
+          "'Pili a le Customs' e tu'u ai le pusa",
+          "'Ua e manumalo' ae mana'omia le pili",
+          "'Teufaafaigaluega e fa'alua' i luga o social media"
+        ]
+      }
+    }
+  },
+  misinformation: {
+    en: {
+      name: "Misinformation (rumours & false posts)",
+      keywords: ["fake news","rumour","share","is it true","facebook post","video true","trust"],
+      advice: {
+        what: [
+          "False posts often use shocking claims, old photos, or no source.",
+          "They spread quickly in groups and can cause harm or panic."
+        ],
+        now: [
+          "Check the date, the source, and whether the claim appears on a reputable site.",
+          "Ask: Who benefits if people believe this? Is there an official notice?",
+          "Wait before sharing—even if it feels urgent."
+        ],
+        report: [
+          "Use in-app 'Report post' and add a note why it looks false.",
+          "Share a corrective link from a trusted source instead of arguing."
+        ],
+        examples: ["Old cyclone photos shared as 'today'","Fake giveaways using official logos"]
+      }
+    },
+    sm: {
+      name: "Fa'amatalaga sese (talanoaga & posts pepelo)",
+      keywords: ["tala pepelo","rumour","fa'asoa","e moni?","facebook post","vitio moni","fa'atuatuaina"],
+      advice: {
+        what: [
+          "E fa'aoga ata tuai, fa'amatalaga fa'ate'ia, pe leai se puna'oa.",
+          "E vave fa'asolo i kulupu ma e ono a'afia ai le nu'u."
+        ],
+        now: [
+          "Siaki le aso, le puna'oa, ma pe iai i se 'upega tafa'ilagi fa'atuatuaina.",
+          "Fesili: O ai e aoga pe a talitonu tagata i lenei tala? E i ai se fa'aaliga aloa'ia?",
+          "Tatalo ae le'i fa'asoa—e ui lava e lagona le fa'anatinati."
+        ],
+        report: [
+          "Fa'aaoga 'Report post' i totonu o le app ma fa'amatala le mafua'aga.",
+          "Fa'asoa se sootaga fa'amaonia nai lo le finau."
+        ],
+        examples: ["Ata o afa tuai ae fai mai 'aso nei'","Giveaway pepelo e fa'aogaina ai logo aloa'ia"]
+      }
+    }
+  },
+  fraud: {
+    en: {
+      name: "Fraud & impersonation",
+      keywords: ["impersonate","pretend","official","government","passport","id","license","licence","fee"],
+      advice: {
+        what: [
+          "Scammers pretend to be officials or company reps to collect payments or data.",
+          "They may use copied logos, uniforms, or look-alike email addresses."
+        ],
+        now: [
+          "Ask for a reference number and call the organisation using a public number to confirm.",
+          "Do not send photos of your passport or ID by chat."
+        ],
+        report: ["Keep the messages and report to the real organisation and police."],
+        examples: ["'Government fee' by bank transfer","Courier asking for ID photo in chat"]
+      }
+    },
+    sm: {
+      name: "Taufaasese & fa'ailogalulu",
+      keywords: ["fa'ailogalulu","fa'asesē","ofisa","malo","passport","id","license","pili"],
+      advice: {
+        what: [
+          "E pepelo e pei o tagata ofisa po'o sui o kamupani e ao mai pili po'o fa'amatalaga.",
+          "E mafai ona fa'aoga logo kopi po'o tuatusi imeli e foliga tutusa."
+        ],
+        now: [
+          "Talosaga se numera fa'amaumauga ma vala'au le fa'alapotopotoga i se numera lautele.",
+          "Aua le lafoina ata o lau ID/Passport i fe'au."
+        ],
+        report: ["Teu uma fe'au ma lipoti i le fa'alapotopotoga moni ma leoleo."],
+        examples: ["'Pili a le malo' e ala i le faletupe","Courier e talosaga ata o ID i fe'au"]
+      }
+    }
+  },
+  bullying: {
+    en: {
+      name: "Cyberbullying & harassment",
+      keywords: ["bully","harass","hurt","threat","abuse","stalk","embarrass"],
+      advice: {
+        what: [
+          "Online abuse can be blocking, insults, threats, or sharing private photos.",
+          "It's okay to step away and seek support—abuse is not your fault."
+        ],
+        now: [
+          "Do not reply to provoke. Take screenshots.",
+          "Block and report the account. Adjust privacy settings to limit messages.",
+          "If you feel unsafe, contact police and someone you trust."
+        ],
+        report: ["Use 'Report' in the app. Save evidence in a safe place."],
+        examples: ["Threats in Messenger","Sharing photos without consent"]
+      }
+    },
+    sm: {
+      name: "Sauāga i luga o upega (cyberbullying)",
+      keywords: ["sauāga","fa'amatalaga mata'utia","taufa'amata'u","fa'alumaina","stalk"],
+      advice: {
+        what: [
+          "E aofia ai le poloka, upu sauā, taufa'amata'u, po'o le fa'asoa ata tuma'oti.",
+          "E lelei le taofi teisi ma saili se fesoasoani—e lē o lou sese."
+        ],
+        now: [
+          "Aua le tali i upu e fa'aoso. Pu'e screenshots.",
+          "Poloka ma lipoti le account. Suia seti o le fa'alilolilo.",
+          "Afai e lamatia lou saogalemu, vala'au leoleo ma se tagata fa'atuatuaina."
+        ],
+        report: ["Fa'aaoga 'Report' i totonu o le app. Teu le fa'amaoniga i se nofoaga saogalemu."],
+        examples: ["Taufa'amata'u i Messenger","Fa'asoa ata e aunoa ma le fa'atagaga"]
+      }
+    }
+  },
+  identity: {
+    en: {
+      name: "Identity theft",
+      keywords: ["identity","my id","account taken","hacked","someone used my name","impersonation"],
+      advice: {
+        what: ["Someone may open accounts or contact others pretending to be you."],
+        now: [
+          "Change passwords and enable 2FA on important accounts.",
+          "Tell friends/family that an impostor might contact them.",
+          "Contact your bank and key services to add extra checks."
+        ],
+        report: ["Report impostor profiles to platforms, provide ID if requested through official channels only."],
+        examples: ["Fake Facebook profile using your photos","Bank account attempt in your name"]
+      }
+    },
+    sm: {
+      name: "Gaoiga o le fa'asinomaga",
+      keywords: ["fa'asinomaga","la'u igoa","account gaoia","hacked","fa'atusaina a'u"],
+      advice: {
+        what: ["E mafai ona fa'aaoga e se isi lou igoa e fai ai tala po'o feso'ota'i ma isi."],
+        now: [
+          "Sui pasiupu ma fa'aola le 2FA i tala tāua.",
+          "Lapata'i uo/aiga pe a maua se fe'au masalomia.",
+          "Fa'afeso'ota'i le faletupe ma tautua tāua e fa'aopoopo siaki."
+        ],
+        report: ["Lipoti tala pepelo i luga o fa'asalalauga, tu'uina atu ID pe a mana'omia i auala aloa'ia."],
+        examples: ["Tala Facebook pepelo e fa'aaoga au ata","Taumafaiga tatalaina teugatupe i lou igoa"]
+      }
+    }
+  }
+};
+
+// Inject topics into L
+for (const k of Object.keys(TOPICS)) {
+  L.en.topics[k] = TOPICS[k].en;
+  L.sm.topics[k] = TOPICS[k].sm;
 }
 
-function addMessage(role, text) {
-  const chat = document.getElementById('chat');
-  const div = document.createElement('div');
-  div.className = 'msg ' + role;
-  div.textContent = (role==='user'? 'You: ' : 'Guide: ') + text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
+const ORDER = ["money","phishing","misinformation","fraud","bullying","identity"];
+let LANG = 'en';
+let recognizing = false;
+let recognition;
+
+function toast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg; t.style.position='fixed'; t.style.bottom='16px'; t.style.right='16px'; t.style.background='rgba(0,0,0,.7)'; t.style.padding='10px 12px'; t.style.borderRadius='10px'; t.style.fontWeight='700'; t.style.zIndex='9999';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 1600);
+}
+
+function detectIntent(text, lang){
+  const t = text.toLowerCase();
+  const pack = L[lang].topics;
+  let scores = {};
+  for(const k of ORDER){
+    const topic = pack[k];
+    const hits = topic.keywords.reduce((acc,kw)=>acc + (t.includes(kw)?1:0),0);
+    scores[k] = hits;
+  }
+  const best = Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+  if(!best || best[1]===0) return null;
+  return best[0];
+}
+
+function addMessage(role, text, rawHTML=false){
+  const chatEl = document.getElementById('chat');
+  const row = document.createElement('div');
+  row.className = 'msg';
+  const avatar = document.createElement('div');
+  avatar.className = 'role ' + (role==='user'?'user':'bot');
+  avatar.textContent = role==='user'? (LANG==='en'? 'You':'Oe') : (LANG==='en'? 'Guide':"Ta'iala");
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  if(rawHTML){ bubble.innerHTML = text; } else { bubble.textContent = text; }
+  row.appendChild(avatar); row.appendChild(bubble); chatEl.appendChild(row);
+  chatEl.scrollTop = chatEl.scrollHeight;
+  return bubble;
+}
+
+function formatAdvice(topicKey){
+  const t = L[LANG].topics[topicKey];
+  const {what, now, report, examples} = t.advice;
+  let html = '';
+  html += `<h3>${t.name}</h3>`;
+  html += `<p class="kicker">${LANG==='en'?'What this looks like:':'O le ā e masani ona iloa:'}</p>`;
+  html += '<ul class="bullets">'+ what.map(x=>`<li>${x}</li>`).join('') + '</ul>';
+  html += `<p class="kicker">${LANG==='en'?'What to do now:':"La'asaga o le taimi nei:"}</p>`;
+  html += '<ul class="bullets">'+ now.map(x=>`<li>${x}</li>`).join('') + '</ul>';
+  html += `<p class="kicker">${LANG==='en'?'How to report:':'Auala e lipoti ai:'}</p>`;
+  html += '<ul class="bullets">'+ report.map(x=>`<li>${x}</li>`).join('') + '</ul>';
+  html += `<p class="kicker">${LANG==='en'?'Examples:':"Fa'ata'ita'iga:"}</p>`;
+  html += '<ul class="bullets">'+ examples.map(x=>`<li>${x}</li>`).join('') + '</ul>';
+  html += `<div class="chips">`
+       + `<button class="chip" data-action="copy">${L[LANG].ui.chips.copySteps}</button>`
+       + `<button class="chip" data-action="speak">${L[LANG].ui.chips.speak}</button>`
+       + `<button class="chip" data-action="report">${L[LANG].ui.chips.report}</button>`
+       + `<button class="chip" data-action="checklist">${L[LANG].ui.chips.checklist}</button>`
+       + `</div>`;
+  return html;
+}
+
+function handleChips(bubble, topicKey){
+  bubble.addEventListener('click', (e)=>{
+    const tgt = e.target;
+    if(!(tgt && tgt.getAttribute)) return;
+    const act = tgt.getAttribute('data-action');
+    if(!act) return;
+    const t = L[LANG].topics[topicKey];
+    const text = [
+      t.name,
+      '\n' + (LANG==='en'?'What this looks like:':"O le ā e masani ona iloa:"),
+      ...t.advice.what.map(x=>'• '+x),
+      '\n' + (LANG==='en'?'What to do now:':"La'asaga o le taimi nei:"),
+      ...t.advice.now.map(x=>'• '+x),
+      '\n' + (LANG==='en'?'How to report:':'Auala e lipoti ai:'),
+      ...t.advice.report.map(x=>'• '+x)
+    ].join('\n');
+
+    if(act==='copy'){
+      navigator.clipboard?.writeText(text);
+      toast(LANG==='en'?'Steps copied.':"Ua kopi la'asaga.");
+    }
+    if(act==='speak'){
+      speak(text);
+    }
+    if(act==='report'){
+      document.getElementById('helpBlock').scrollIntoView({behavior:'smooth'});
+      toast(LANG==='en'?'See local help contacts on the right.':"Va'ai i feso'ota'iga fesoasoani i le itu taumatau.");
+    }
+    if(act==='checklist'){
+      const ck = (LANG==='en'
+        ? ['Stop & breathe', 'Do not pay/click', 'Tell a trusted person', 'Collect evidence (screenshots)', 'Call bank/telco if needed']
+        : ['Taofi ma mālū', "Aua le totogi/omi so'oga", "Ta'u i se tagata fa'atuatuaina", "Ao mai fa'amaoniga (screenshots)", "Vala'au le faletupe/telefoni pe a mana'omia"]
+      );
+      const html = '<ul class="bullets">'+ ck.map(x=>`<li>${x}</li>`).join('') + '</ul>';
+      addMessage('assistant', html, true);
+    }
+  });
+}
+
+function topicButtonsHtml(){
+  const pack = L[LANG].topics;
+  return `<div class="chips">${ORDER.map(k=>`<button class='chip' data-topic='${k}'>${pack[k].name}</button>`).join('')}</div>`;
+}
+
+function attachTopicButtonHandlers(container){
+  container.addEventListener('click', (e)=>{
+    const t = e.target.getAttribute && e.target.getAttribute('data-topic');
+    if(!t) return;
+    const html = formatAdvice(t);
+    const b = addMessage('assistant', html, true);
+    handleChips(b, t);
+  });
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const smPref = voices.find(v=>/Samoan|sm/i.test(v.lang));
+  const enPref = voices.find(v=>/en/i.test(v.lang));
+  u.voice = (LANG==='sm' && smPref) ? smPref : enPref || null;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function renderTopicGrid(){
+  const grid = document.getElementById('topicGrid');
+  grid.innerHTML = '';
+  for(const k of ORDER){
+    const t = L[LANG].topics[k];
+    const btn = document.createElement('button');
+    btn.className = 'btn topic';
+    btn.innerHTML = `⚑ ${t.name}`;
+    btn.addEventListener('click', ()=>{
+      const b = addMessage('assistant', formatAdvice(k), true);
+      handleChips(b, k);
+    });
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.appendChild(btn);
+    grid.appendChild(card);
+  }
+}
+
+function renderHelp(){
+  const hb = document.getElementById('helpBlock');
+  const H = L[LANG].help;
+  hb.innerHTML = '';
+  const items = [
+    {title:H.police.label, note:H.police.note},
+    {title:H.bank.label, note:H.bank.note},
+    {title:H.telco.label, note:H.telco.note},
+    {title:H.community.label, note:H.community.note},
+  ];
+  for(const it of items){
+    const d = document.createElement('div');
+    d.className = 'card';
+    d.innerHTML = `<strong>${it.title}</strong><div class="tiny">${it.note}</div>`;
+    hb.appendChild(d);
+  }
+  if(H.placeholders && H.contacts?.length){
+    const wrap = document.createElement('div');
+    wrap.className = 'card';
+    wrap.innerHTML = `<div class='tiny'>${LANG==='en'?'Local contact placeholders (update in code):':"Numera ma so'otaga fa'ata'ita'i (toe fa'afou i le code):"}</div>`;
+    const ul = document.createElement('ul');
+    ul.className = 'bullets';
+    H.contacts.forEach(c=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${c.name}:</strong> ${c.href && c.href!=='#' ? `<a href='${c.href}' target='_blank' rel='noopener'>${c.value}</a>` : `${c.value}`}`;
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+    hb.appendChild(wrap);
+  }
+}
+
+function setLang(lang){
+  LANG = lang;
+  const btnEN = document.getElementById('btn-en');
+  const btnSM = document.getElementById('btn-sm');
+  btnEN.classList.toggle('active', lang==='en');
+  btnEN.setAttribute('aria-pressed', lang==='en');
+  btnSM.classList.toggle('active', lang==='sm');
+  btnSM.setAttribute('aria-pressed', lang==='sm');
+  document.getElementById('title').textContent = L[lang].ui.title;
+  document.getElementById('subtitle').textContent = L[lang].ui.subtitle;
+  document.getElementById('chat-heading').textContent = lang==='en'? 'Chat' : 'Talanoaga';
+  document.getElementById('userInput').placeholder = L[lang].ui.placeholder;
+  document.getElementById('disclaimer').textContent = L[lang].ui.disclaimer;
+  document.getElementById('introNotice').textContent = L[lang].ui.introNotice;
+  document.getElementById('quickTopicsH3').textContent = L[lang].ui.quickTopics;
+  document.getElementById('getHelpH3').textContent = L[lang].ui.getHelp;
+  document.getElementById('shareText').textContent = L[lang].ui.shareText;
+  renderTopicGrid();
+  renderHelp();
+  // refresh quick-ask
+  buildQuickAsk();
 }
 
 function replyTo(text){
-  const intent = detectIntent(text);
-  if(intent){
-    addMessage('bot', responses[intent]);
-  } else {
-    addMessage('bot', "I'm not sure, but remember: never share passwords or send money without checking with family.");
+  const intent = detectIntent(text, LANG) || detectIntent(text, LANG==='en'?'sm':'en');
+  if(!intent){
+    const f = L[LANG].ui.fallback;
+    const html = `<h3>${f.title}</h3><p>${f.prompt}</p>` + topicButtonsHtml();
+    const b = addMessage('assistant', html, true);
+    attachTopicButtonHandlers(b);
+    return;
   }
+  const html = formatAdvice(intent);
+  const b = addMessage('assistant', html, true);
+  handleChips(b, intent);
 }
 
-const sendBtn = document.getElementById('sendBtn');
-const clearBtn = document.getElementById('clearBtn');
-const inputEl = document.getElementById('userInput');
+function buildQuickAsk(){
+  const qa = document.getElementById('quickAsk');
+  if(!qa) return;
+  const samples = [
+    {en:"Someone asked me to pay a Customs fee", sm:"Ua fai mai e totogi se pili a le Customs"},
+    {en:"Is this Facebook message real?", sm:"E moni lenei fe'au a le Facebook?"},
+    {en:"My account was hacked", sm:"Ua gaoia la'u account"}
+  ];
+  qa.innerHTML = samples.map((s,i)=>`<button class='chip' data-sample='${i}'>${s[LANG]}</button>`).join(' ');
+  qa.onclick = (e)=>{
+    const i = e.target.getAttribute && e.target.getAttribute('data-sample');
+    if(i==null) return;
+    const text = samples[Number(i)][LANG];
+    addMessage('user', text);
+    replyTo(text);
+  };
+}
 
-sendBtn.addEventListener('click', ()=>{
-  const val = inputEl.value.trim();
-  if(!val) return;
-  addMessage('user', val);
-  replyTo(val);
-  inputEl.value='';
-});
+function bootstrap(){
+  setLang('en');
+  addMessage('assistant', "Talofa lava! I'm your friendly guide. Ask me about messages, fees, or suspicious links.");
+  const b = addMessage('assistant', topicButtonsHtml(), true);
+  attachTopicButtonHandlers(b);
+  buildQuickAsk();
+  document.getElementById('userInput').focus();
+}
 
-inputEl.addEventListener('keydown', (e)=>{
-  if(e.key==='Enter') {
-    e.preventDefault();
-    sendBtn.click();
+function bindCoreEvents(){
+  document.getElementById('sendBtn').onclick = ()=>{
+    const input = document.getElementById('userInput');
+    const val = (input.value||'').trim();
+    if(!val){ toast(LANG==='en'?'Please type a message':"Tusi se fe'au"); return; }
+    input.value='';
+    addMessage('user', val);
+    replyTo(val);
+  };
+  document.getElementById('userInput').onkeydown = (e)=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      document.getElementById('sendBtn').click();
+    }
+  };
+  document.getElementById('clearBtn').onclick = ()=>{ document.getElementById('chat').innerHTML=''; };
+  document.getElementById('btn-en').onclick = ()=> setLang('en');
+  document.getElementById('btn-sm').onclick = ()=> setLang('sm');
+  const micBtn = document.getElementById('micBtn');
+  if('webkitSpeechRecognition' in window){
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false; recognition.lang = 'en-US'; recognition.interimResults = false;
+    recognition.onresult = (ev)=>{ document.getElementById('userInput').value = ev.results[0][0].transcript; };
+    recognition.onend = ()=>{ recognizing = false; micBtn.textContent = '🎤'; };
   }
-});
+  micBtn.onclick = ()=>{
+    if(!recognition){ toast(LANG==='en'?'Voice not supported.':"Le lagolagoina le leo."); return; }
+    if(!recognizing){ recognizing = true; micBtn.textContent='⏺️'; recognition.lang = (LANG==='sm'?'sm-WS':'en-US'); recognition.start(); }
+    else{ recognition.stop(); }
+  };
+}
 
-clearBtn.addEventListener('click', ()=>{
-  document.getElementById('chat').innerHTML = '';
-});
-
-// Welcome message
-addMessage('bot', "Talofa! Ask me about scams, fraud, or online safety.");
+if(document.readyState==='complete' || document.readyState==='interactive'){
+  try{ bindCoreEvents(); bootstrap(); }catch(e){ console.error(e); }
+} else {
+  document.addEventListener('DOMContentLoaded', ()=>{ try{ bindCoreEvents(); bootstrap(); }catch(e){ console.error(e); } });
+}
 </script>
 </body>
 </html>
