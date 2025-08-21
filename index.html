@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fa'amautū-Upega | Samoa Seniors Cyber Safety Chatbot (POC)</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#0b132b; color:#fff; margin:0; }
+  .container { max-width:800px; margin:0 auto; padding:20px; }
+  h1 { font-size:20px; }
+  #chat { background:#1c2541; padding:10px; border-radius:8px; height:400px; overflow-y:auto; }
+  .msg { margin:6px 0; }
+  .user { color:#f6ae2d; }
+  .bot { color:#5bc0be; }
+  #inputArea { margin-top:10px; display:flex; }
+  #userInput { flex:1; padding:10px; border-radius:6px; border:none; }
+  button { padding:10px 16px; margin-left:6px; border:none; border-radius:6px; cursor:pointer; }
+  #sendBtn { background:#5bc0be; color:#000; font-weight:bold; }
+  #clearBtn { background:#f6ae2d; color:#000; font-weight:bold; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Fa'amautū-Upega — Samoa Seniors Cyber Safety Chatbot</h1>
+    <div id="chat"></div>
+    <div id="inputArea">
+      <input id="userInput" type="text" placeholder="Type your question here" />
+      <button id="sendBtn" type="button">Send</button>
+      <button id="clearBtn" type="button">Clear</button>
+    </div>
+  </div>
+
+<script>
+const responses = {
+  phishing: "Scammers may send fake emails or SMS asking for your password or codes. Do not click suspicious links.",
+  money: "Common scams include parcel fees, fake lotteries, and quick profit schemes. Always check with trusted family before paying.",
+  bullying: "If someone bullies you online, take screenshots, block them, and tell someone you trust.",
+  identity: "If your account is hacked, change your password, enable 2FA, and inform your contacts.",
+  fraud: "Scammers may impersonate officials. Verify by calling the real organisation using a public number.",
+  misinformation: "False posts spread quickly. Check the date, source, and official notices before sharing.",
+};
+
+function detectIntent(text) {
+  text = text.toLowerCase();
+  if(text.includes("password")||text.includes("link")) return "phishing";
+  if(text.includes("money")||text.includes("parcel")||text.includes("fee")) return "money";
+  if(text.includes("bully")||text.includes("harass")) return "bullying";
+  if(text.includes("identity")||text.includes("hacked")) return "identity";
+  if(text.includes("official")||text.includes("government")) return "fraud";
+  if(text.includes("fake")||text.includes("rumour")) return "misinformation";
+  return null;
+}
+
+function addMessage(role, text) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = (role==='user'? 'You: ' : 'Guide: ') + text;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function replyTo(text){
+  const intent = detectIntent(text);
+  if(intent){
+    addMessage('bot', responses[intent]);
+  } else {
+    addMessage('bot', "I'm not sure, but remember: never share passwords or send money without checking with family.");
+  }
+}
+
+const sendBtn = document.getElementById('sendBtn');
+const clearBtn = document.getElementById('clearBtn');
+const inputEl = document.getElementById('userInput');
+
+sendBtn.addEventListener('click', ()=>{
+  const val = inputEl.value.trim();
+  if(!val) return;
+  addMessage('user', val);
+  replyTo(val);
+  inputEl.value='';
+});
+
+inputEl.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter') {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+clearBtn.addEventListener('click', ()=>{
+  document.getElementById('chat').innerHTML = '';
+});
+
+// Welcome message
+addMessage('bot', "Talofa! Ask me about scams, fraud, or online safety.");
+</script>
+</body>
+</html>
